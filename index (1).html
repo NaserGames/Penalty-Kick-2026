@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyTube Premium | Next-Gen Streaming</title>
+  <style>
+    :root {
+      --bg-main: #0f0f0f;
+      --bg-secondary: #1e1e1e;
+      --accent-red: #ff0000;
+      --accent-blue: #3ea6ff;
+      --text-main: #f1f1f1;
+      --text-dim: #aaa;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --hover-bg: rgba(255, 255, 255, 0.15);
+      --sidebar-width: 240px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-main); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+    /* HEADER */
+    header {
+      position: fixed;
+      top: 0; width: 100%; height: 56px;
+      background: rgba(15, 15, 15, 0.98);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 2000;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .left-section { display: flex; align-items: center; gap: 16px; }
+    .menu-toggle { cursor: pointer; padding: 8px; border-radius: 50%; }
+    .menu-toggle:hover { background: var(--hover-bg); }
+    
+    .logo {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+    }
+    .logo-icon { color: var(--accent-red); font-size: 24px; }
+
+    .search-container {
+      flex: 0 1 720px; display: flex; align-items: center; gap: 12px;
+    }
+    .search-bar {
+      display: flex; flex: 1; background: #121212;
+      border: 1px solid #333; border-radius: 40px; overflow: hidden;
+      transition: border 0.3s;
+    }
+    .search-bar:focus-within { border: 1px solid var(--accent-blue); }
+    .search-bar input {
+      flex: 1; background: transparent; border: none;
+      padding: 10px 20px; color: white; outline: none; font-size: 16px;
+    }
+    .search-bar button {
+      background: #222; border: none; width: 64px;
+      color: white; cursor: pointer; border-left: 1px solid #333;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed; top: 56px; left: 0; bottom: 0;
+      width: var(--sidebar-width); background: var(--bg-main);
+      padding: 12px; overflow-y: auto; transition: width 0.3s;
+    }
+    .sidebar.collapsed { width: 72px; }
+    .sidebar.collapsed span:last-child { display: none; }
+
+    .nav-item {
+      display: flex; align-items: center; padding: 12px;
+      border-radius: 10px; text-decoration: none; color: var(--text-main);
+      margin-bottom: 4px; transition: 0.2s;
+    }
+    .nav-item:hover { background: var(--hover-bg); }
+    .nav-item.active { background: #272727; font-weight: 600; }
+    .nav-item .icon { width: 24px; margin-right: 20px; text-align: center; }
+
+    /* FILTERS BAR */
+    .filters {
+      display: flex; gap: 12px; margin-bottom: 24px;
+      overflow-x: auto; padding-bottom: 8px;
+    }
+    .filter-chip {
+      background: #272727; padding: 6px 12px; border-radius: 8px;
+      font-size: 14px; white-space: nowrap; cursor: pointer; border: 1px solid transparent;
+      transition: 0.2s;
+    }
+    .filter-chip:hover { background: #3f3f3f; }
+    .filter-chip.active { background: white; color: black; }
+
+    /* CONTENT AREA */
+    .content-area {
+      margin-top: 56px; margin-left: var(--sidebar-width);
+      padding: 24px; transition: margin-left 0.3s;
+    }
+    .content-area.expanded { margin-left: 72px; }
+
+    /* VIDEO GRID */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 32px 16px;
+    }
+    .video-card { cursor: pointer; }
+    .thumb-container {
+      position: relative; border-radius: 12px;
+      overflow: hidden; aspect-ratio: 16/9; background: #222;
+    }
+    .thumb-container img { width: 100%; height: 100%; object-fit: cover; }
+    .duration {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.8); padding: 2px 4px;
+      border-radius: 4px; font-size: 12px; font-weight: 500;
+    }
+
+    .video-info { display: flex; gap: 12px; margin-top: 12px; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(45deg, #333, #555);
+    }
+    .meta h4 { font-size: 16px; margin-bottom: 4px; line-height: 1.4; }
+    .meta p { font-size: 14px; color: var(--text-dim); }
+
+    /* WATCH PAGE */
+    #watch-screen { display: none; gap: 24px; }
+    .player-section { flex: 1; }
+    .video-box { 
+      background: #000; border-radius: 16px; 
+      overflow: hidden; width: 100%; aspect-ratio: 16/9;
+    }
+    .video-box video { width: 100%; height: 100%; }
+    
+    .stats-row { 
+        display: flex; justify-content: space-between; 
+        align-items: center; margin-top: 12px;
+        padding-bottom: 12px; border-bottom: 1px solid var(--border-color);
+    }
+
+    /* LIKE BUTTON STYLE */
+    .btn-action {
+      background: #272727; padding: 8px 16px; border-radius: 20px;
+      font-size: 14px; cursor: pointer; border: none; color: white;
+      display: flex; align-items: center; gap: 6px; transition: 0.2s;
+    }
+    .btn-action:hover { background: #3f3f3f; }
+    .btn-action.active { color: var(--accent-blue); }
+    .btn-action:active { transform: scale(0.9); }
+
+    /* SUBSCRIBE BUTTON */
+    .sub-btn {
+      background: white; color: black; padding: 8px 16px;
+      border-radius: 20px; font-weight: 600; border: none; cursor: pointer;
+    }
+    .sub-btn.active { background: #272727; color: white; }
+
+    /* ANIMATIONS */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .video-card { animation: fadeIn 0.4s ease forwards; }
+
+    @media (max-width: 1100px) {
+        #watch-screen { flex-direction: column; }
+        .sidebar { width: 72px; }
+        .sidebar span:last-child { display: none; }
+        .content-area { margin-left: 72px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="left-section">
+    <div class="menu-toggle" onclick="toggleSidebar()">☰</div>
+    <div class="logo" onclick="location.reload()">
+      <span class="logo-icon">▶</span>
+      <span>MyTube<sup style="font-size: 10px; margin-left: 2px; color: #aaa;">Premium</sup></span>
+    </div>
+  </div>
+  
+  <div class="search-container">
+    <div class="search-bar">
+      <input type="text" placeholder="Search" id="search-input" oninput="handleSearch()">
+      <button>🔍</button>
+    </div>
+    <div class="menu-toggle">🎙️</div>
+  </div>
+
+  <div class="left-section">
+    <span style="cursor: pointer;">🔔</span>
+    <div class="avatar" style="width: 32px; height: 32px; cursor: pointer;"></div>
+  </div>
+</header>
+
+<div class="sidebar" id="sidebar">
+  <a href="#" class="nav-item active"><span class="icon">🏠</span><span>Home</span></a>
+  <a href="#" class="nav-item"><span class="icon">🔥</span><span>Trending</span></a>
+  <a href="#" class="nav-item"><span class="icon">📱</span><span>Shorts</span></a>
+  <a href="#" class="nav-item"><span class="icon">📺</span><span>Subscriptions</span></a>
+  <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+  <a href="#" class="nav-item"><span class="icon">📚</span><span>Library</span></a>
+  <a href="#" class="nav-item"><span class="icon">🕒</span><span>History</span></a>
+</div>
+
+<div class="content-area" id="content">
+  <div id="home-screen">
+    <div class="filters" id="filter-bar">
+      <div class="filter-chip active" onclick="filterByCategory('All', this)">All</div>
+      <div class="filter-chip" onclick="filterByCategory('Programming', this)">Programming</div>
+      <div class="filter-chip" onclick="filterByCategory('Music', this)">Music</div>
+      <div class="filter-chip" onclick="filterByCategory('Travel', this)">Travel</div>
+      <div class="filter-chip" onclick="filterByCategory('Cooking', this)">Cooking</div>
+      <div class="filter-chip" onclick="filterByCategory('Space', this)">Space</div>
+    </div>
+    <div class="video-grid" id="main-grid"></div>
+  </div>
+
+  <div id="watch-screen">
+    <div class="player-section">
+      <div class="video-box">
+        <video id="player" controls autoplay></video>
+      </div>
+      <div class="video-info" style="flex-direction: column; gap: 4px;">
+        <h1 id="v-title" style="font-size: 20px; margin-top: 12px;">Video Title</h1>
+        <div class="stats-row">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar"></div>
+                <div>
+                    <h4 id="v-channel" style="font-size: 14px;">Channel Name</h4>
+                    <p style="font-size: 12px; color: var(--text-dim);">1.2M subscribers</p>
+                </div>
+                <button class="sub-btn" onclick="toggleSub(this)" style="margin-left: 12px;">Subscribe</button>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-action" onclick="toggleLike(this)">
+                    <span id="like-icon">👍</span> <span id="like-count">14,203</span>
+                </button>
+                <button class="btn-action">👎</button>
+                <button class="btn-action">🔗 Share</button>
+            </div>
+        </div>
+        <div style="background: #272727; padding: 12px; border-radius: 12px; margin-top: 12px;">
+            <p id="v-meta" style="font-weight: 600; font-size: 14px; margin-bottom: 4px;"></p>
+            <p style="font-size: 14px;">This is a detailed description for the video content in 2026. #trending #premium</p>
+        </div>
+      </div>
+    </div>
+    <div class="rec-section" style="width: 400px;" id="rec-list"></div>
+  </div>
+</div>
+
+<script>
+  const videoData = [
+    { id: 1, category: "Space", title: "Deep Space: The 2026 Exploration", channel: "Galactic", views: "2.4M", duration: "12:04", thumb: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", likes: 14203 },
+    { id: 2, category: "Programming", title: "Minimalist Workspace Tour", channel: "DesignFlow", views: "850K", duration: "08:15", thumb: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", likes: 5200 },
+    { id: 3, category: "Programming", title: "AI and the Future of Web Dev", channel: "CodeStack", views: "4.1M", duration: "45:20", thumb: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", likes: 89000 },
+    { id: 4, category: "Travel", title: "Unseen Bali: Travel Guide", channel: "Nomad", views: "1.1M", duration: "15:30", thumb: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", likes: 12400 },
+    { id: 5, category: "Music", title: "Cyberpunk Beats 24/7", channel: "SynthCity", views: "10M", duration: "3:00:00", thumb: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", likes: 250000 },
+    { id: 6, category: "Cooking", title: "The Secret to Perfect Espresso", channel: "BrewMaster", views: "300K", duration: "10:45", thumb: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4", likes: 9800 }
+  ];
+
+  let currentLikes = 0;
+  let isLiked = false;
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.getElementById('content').classList.toggle('expanded');
+  }
+
+  function renderHome(data = videoData) {
+    const grid = document.getElementById('main-grid');
+    if (data.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: var(--text-dim);">No videos found.</div>`;
+      return;
+    }
+    grid.innerHTML = data.map(v => `
+      <div class="video-card" onclick="openVideo(${v.id})">
+        <div class="thumb-container">
+          <img src="${v.thumb}" loading="lazy">
+          <span class="duration">${v.duration}</span>
+        </div>
+        <div class="video-info">
+          <div class="avatar"></div>
+          <div class="meta">
+            <h4>${v.title}</h4>
+            <p>${v.channel}</p>
+            <p>${v.views} views • 2 hours ago</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function handleSearch() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    document.getElementById('home-screen').style.display = 'block';
+    document.getElementById('watch-screen').style.display = 'none';
+    document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+    document.querySelector('.filter-chip').classList.add('active');
+    const filteredVideos = videoData.filter(video => 
+      video.title.toLowerCase().includes(query) || 
+      video.channel.toLowerCase().includes(query)
+    );
+    renderHome(filteredVideos);
+  }
+
+  function filterByCategory(category, element) {
+    document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+    element.classList.add('active');
+    if (category === 'All') { renderHome(videoData); } 
+    else { renderHome(videoData.filter(v => v.category === category)); }
+  }
+
+  function openVideo(id) {
+    const video = videoData.find(v => v.id === id);
+    document.getElementById('home-screen').style.display = 'none';
+    const watch = document.getElementById('watch-screen');
+    watch.style.display = 'flex';
+    
+    document.getElementById('player').src = video.src;
+    document.getElementById('v-title').innerText = video.title;
+    document.getElementById('v-channel').innerText = video.channel;
+    document.getElementById('v-meta').innerText = `${video.views} views • Mar 25, 2026`;
+    
+    // Set Like Stats
+    currentLikes = video.likes;
+    isLiked = false;
+    const btn = document.querySelector('.btn-action');
+    btn.classList.remove('active');
+    document.getElementById('like-count').innerText = currentLikes.toLocaleString();
+
+    renderRecs(id);
+    window.scrollTo(0,0);
+  }
+
+  function toggleLike(btn) {
+    isLiked = !isLiked;
+    if (isLiked) {
+        currentLikes++;
+        btn.classList.add('active');
+    } else {
+        currentLikes--;
+        btn.classList.remove('active');
+    }
+    document.getElementById('like-count').innerText = currentLikes.toLocaleString();
+  }
+
+  function toggleSub(btn) {
+    btn.classList.toggle('active');
+    btn.innerText = btn.classList.contains('active') ? "Subscribed" : "Subscribe";
+  }
+
+  function renderRecs(currentId) {
+    const list = document.getElementById('rec-list');
+    const recs = videoData.filter(v => v.id !== currentId);
+    list.innerHTML = recs.map(v => `
+      <div class="video-info" style="margin-bottom: 16px; cursor: pointer;" onclick="openVideo(${v.id})">
+        <div style="width: 160px; height: 90px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+            <img src="${v.thumb}" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div class="meta">
+          <h4 style="font-size: 14px; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">${v.title}</h4>
+          <p style="font-size: 12px;">${v.channel}</p>
+          <p style="font-size: 12px;">${v.views} views</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderHome();
+</script>
+
+</body>
+</html>
